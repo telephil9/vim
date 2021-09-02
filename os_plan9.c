@@ -916,7 +916,14 @@ static void free_colors(void) {
 }
 
 static void init_fonts(void) {
-    normalfont = openfont(display, "/lib/font/bit/fixed/unicode.9x18.font");
+    char *n;
+
+    n = getenv("font");
+    if(n)
+	normalfont = openfont(display, n);
+    else
+	normalfont = openfont(display, "/lib/font/bit/fixed/unicode.9x18.font");
+	
     if (normalfont == nil) {
         err9("openfont normal failed");
     }
