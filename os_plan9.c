@@ -29,6 +29,7 @@
 /* We need to access the native Plan 9 alarm() since
  * it takes milliseconds rather than seconds. */
 extern int _ALARM(unsigned long);
+extern int _SLEEP(long);
 
 enum {
     /* Text modes are in sync with term.c */
