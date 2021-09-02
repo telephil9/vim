@@ -1,0 +1,13 @@
+# Vim: enhanced vi editor
+386	- sys sys
+	bin	- sys sys
+		vim	- sys sys
+		xxd	- sys sys
+sys	- sys sys
+	lib	- sys sys 
+		vim	- sys sys 
+			+	- sys sys 
+	src	- sys sys
+		cmd	- sys sys
+			vim	- sys sys
+				+	- sys sys
