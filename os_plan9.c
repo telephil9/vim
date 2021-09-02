@@ -20,6 +20,7 @@
 #include <draw.h>
 #include <keyboard.h>
 #include <event.h>
+#include <plumb.h>
 #include "vim.h"
 
 /* Vim defines Display.  We need it for libdraw. */
@@ -52,6 +53,8 @@ static Font *normalfont;
 static Font *boldfont;
 static Font *curfont;
 static int curmode; /* TODO remove this, use cterm_normal_fg_color instead for comparing */
+static int plumbkey;
+static int done;
 
 /* Timeouts are handled using alarm() and a signal handler.
  * When an alarm happens during a syscall, the syscall is
@@ -75,6 +78,41 @@ static void derr(Display*, char *msg) {
     }
     err9(msg);
 }
+
+static void drain_plumb_events(void) {
+    Event e;
+    Plumbmsg *m;
+    char *addr;
+    int l = ECMD_ONE;
+
+    while(ecanread(plumbkey)){
+	eread(plumbkey, &e);
+	m = e.v;
+	addr = plumblookup(m->attr, "addr");
+	if(addr)
+		l = atoi(addr);
+	do_ecmd(0, (char_u*)m->data, NULL, NULL, (linenr_T)l, ECMD_HIDE);
+	shell_resized();
+    }
+}
+
+static void start_plumber_thread(void)
+{
+	switch (rfork(RFPROC|RFMEM)){
+	case -1:
+		fprintf(stderr, "rfork failed\n");
+		return;
+	case 0:
+		while(!done){
+			drain_plumb_events();
+			_SLEEP(100);
+		}
+		exit(0);
+	default:
+		break;
+	}
+}
+
 
 int mch_has_wildcard(char_u *p) {
     for (; *p; mb_ptr_adv(p)) {
@@ -918,10 +956,13 @@ static void scr_init(void) {
 
     /* Mouse events must be enabled to receive window resizes. */
     einit(Emouse | Ekeyboard);
+    plumbkey = eplumb(512, "edit");
+    start_plumber_thread();
     scr_inited = TRUE;
 }
 
 void mch_init(void) {
+    done = FALSE;
     signal(SIGALRM, sigalrm);
     scr_init();
 
@@ -938,6 +979,7 @@ void mch_init(void) {
 }
 
 void mch_exit(int r) {
+    done = TRUE;
     ml_close_all(TRUE);    /* remove all memfiles */
     /* libdraw shuts down automatically on exit */
     exit(r);
