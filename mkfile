@@ -7,8 +7,7 @@
 ### See feature.h for a list of optionals.
 
 # The root directory for resources.
-#VIMRCLOC=/sys/lib/vim
-VIMRCLOC=./lib
+VIMRCLOC=/sys/lib/vim
 
 # The runtime files.
 VIMRUNTIMEDIR=$VIMRCLOC/vimfiles
