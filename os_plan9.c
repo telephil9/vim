@@ -923,11 +923,10 @@ static void init_fonts(void) {
 	normalfont = openfont(display, n);
     else
 	normalfont = openfont(display, "/lib/font/bit/fixed/unicode.9x18.font");
-	
     if (normalfont == nil) {
         err9("openfont normal failed");
     }
-    boldfont = openfont(display, "/lib/font/bit/fixed/unicode.9x18B.font");
+    boldfont = openfont(display, n ? n : "/lib/font/bit/fixed/unicode.9x18B.font");
     if (boldfont == nil) {
         err9("openfont bold failed");
     }
@@ -1036,6 +1035,7 @@ void clip_mch_request_selection(VimClipboard *cbd) {
     long_u mlen; /* max allocated length */
     ssize_t n;
     int type;
+
     fd = open("/dev/snarf", O_RDONLY);
     if (fd < 0) {
         /* Not running under rio. */
@@ -1072,6 +1072,9 @@ void clip_mch_set_selection(VimClipboard *cbd) {
     int type;
     int fd;
 
+    fd = open("/dev/snarf", O_RDONLY);
+    if (fd < 0)
+	return;
     /* If the '*' register isn't already filled in, fill it in now. */
     cbd->owned = TRUE;
     clip_get_selection(cbd);
@@ -1096,89 +1099,37 @@ void mch_setmouse(int) {
 }
 #endif
 
-static pid_t
-forkwin(int hide){
-	char spec[256];
-	char *wsys;
-	int wfd;
-	pid_t pid;
-
-	/* Fork child. */
-	pid = fork();
-	if(pid != 0)
-	    return pid;
-
-	/* We need a separate namespace from parent process. */
-	rfork(RFNAMEG);
-
-	/* Mounting the window system creates a new window. */
-	wsys = getenv("wsys");
-	if(!wsys){
-		fprintf(stderr, "wsys not set\n");
-		exit(1);
-	}
-	wfd = open(wsys, O_RDWR);
-	if(wfd < 0){
-		fprintf(stderr, "unable to open \"%s\"\n", wsys);
-		exit(1);
-	}
-	snprintf(spec, sizeof spec, "new -pid %d -scroll %s", getpid(), hide ? "-hide" : "");
-	if(mount(wfd, -1, "/mnt/wsys", MREPL, spec) < 0){
-		fprintf(stderr, "unable to mount\n");
-		exit(1);
-	}
-	if(bind("/mnt/wsys", "/dev", MBEFORE) < 0){
-		fprintf(stderr, "unable to bind\n");
-		exit(1);
-	}
-
-	/* Now reopen standard input, output, and error. */
-	freopen("/dev/cons", "r", stdin);
-	setbuf(stdin, NULL);
-	freopen("/dev/cons", "w", stdout);
-	setbuf(stdout, NULL);
-	freopen("/dev/cons", "w", stderr);
-	setbuf(stderr, NULL);
-
-	return pid;
-}
-
 int mch_call_shell(char_u *cmd, int options) {
-    char ch;
-    pid_t pid;
+    int p[2];
+    int pid;
     int status;
-    int hide;
 
-    /* Non-interactive commands run in a hidden window. */
-    hide = options & SHELL_FILTER || options & SHELL_DOOUT;
-    pid = forkwin(hide);
-    if (pid == -1) {
-	MSG_PUTS(_("\nCannot fork\n"));
-	return -1;
+    status = FAIL;
+    if(pipe(p) < 0) {
+	return FAIL;
     }
-    if (pid == 0) {
-	/* Fork again so that we can prompt the user to
-	 * press a key before the window closes. */
-	pid = fork();
-	if (pid == -1) {
-	    exit(255);
-	}
-	if (pid == 0) {
-	    if (cmd) {
-		execl("/bin/rc", "rc", "-c", cmd, NULL);
-	    } else {
-		execl("/bin/rc", "rc", NULL);
-	    }
-	    exit(122); /* same as on UNIX Vim */
+    pid = rfork(RFPROC|RFFDG|RFENVG);
+    switch(pid) {
+    case -1:
+	close(p[0]);
+	close(p[1]);
+	return FAIL;
+    case 0:
+	close(p[0]);
+	dup2(p[1], 1);
+	dup2(2, 1);
+	if (cmd) {
+	    execl("/bin/rc", "rc", "-c", (char*)cmd, NULL);
 	} else {
-	    waitpid(pid, &status, 0);
-	    if (!hide) {
-		printf("\nPress RETURN to close this window...");
-		read(0, &ch, 1);
-	    }
-	    exit(status);
+	    execl("/bin/rc", "rc", NULL);
 	}
+	exit(122);
+	break;
+    case 1:
+	waitpid(pid, &status, 0);
+	close(p[0]);
+	close(p[1]);
+	break;
     }
-    waitpid(pid, &status, 0);
     return status;
 }
