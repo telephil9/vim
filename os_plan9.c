@@ -666,7 +666,7 @@ static void send_mouse_event(int e, int x, int y) {
     col = x/fontsize.x;
     string[n++] = CSI;
     string[n++] = 'M';
-    string[n++] = (char_u)e|0x20;
+    string[n++] = e;
     string[n++] = (char_u)(col + ' ' + 1);
     string[n++] = (char_u)(row + ' ' + 1);
     add_to_input_buf(string, n);
@@ -677,23 +677,41 @@ static void process_mouse_events(void) {
     static int last_button = 0;
     Mouse m;
     Point pt;
+    int code;
 
+    code = 0;
     while (ecanmouse()) {
         m = emouse();
 	pt = subpt(m.xy, screen->r.min);
-	if(!last_button && m.buttons&1) {
-	    send_mouse_event(MOUSE_LEFT, pt.x, pt.y);
-	    last_button = 1;
-	} else if(!last_button && m.buttons&8) {
-	    send_mouse_event(MOUSEWHEEL_LOW, pt.x, pt.y);
-	    last_button = 1;
-	} else if(!last_button && m.buttons&16) {
-	    send_mouse_event(MOUSEWHEEL_LOW|1, pt.x, pt.y);
-	    last_button = 1;
-	} else if(last_button && m.buttons==0) {
-	    send_mouse_event(MOUSE_RELEASE, pt.x, pt.y);
-	    last_button = 0;
+	if(last_button) {
+	    if(m.buttons) {
+		code = MOUSE_DRAG;
+	    } else {
+		code = MOUSE_RELEASE;
+		last_button = 0;
+	    }
+	} else {
+	    if(m.buttons&1) {
+		code = MOUSE_LEFT;
+		last_button = 1;
+	    } else if(m.buttons&2) {
+		code = MOUSE_MIDDLE;
+		last_button = 2;
+	    } else if(m.buttons&4) {
+		code = MOUSE_RIGHT;
+		last_button = 4;
+	    } else if(m.buttons&8) {
+		code = MOUSEWHEEL_LOW;
+		last_button = 8;
+	    } else if(m.buttons&16) {
+		code = MOUSEWHEEL_LOW|1;
+		last_button = 16;
+	    } else {
+		continue;
+	    }
+	    code |= 0x20;
 	}
+	send_mouse_event(code, pt.x, pt.y);
     }
 }
 
