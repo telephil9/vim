@@ -114,7 +114,6 @@ static void start_plumber_thread(void)
 	}
 }
 
-
 int mch_has_wildcard(char_u *p) {
     for (; *p; mb_ptr_adv(p)) {
         if (*p == '\\' && p[1] != NUL) {
@@ -656,10 +655,45 @@ static void sigalrm(int, char*, void*) {
     /* Do nothing */
 }
 
+static void send_mouse_event(int e, int x, int y) {
+    char_u string[8];
+    int row;
+    int col;
+    int n;
+
+    n = 0;
+    row = y/fontsize.y;
+    col = x/fontsize.x;
+    string[n++] = CSI;
+    string[n++] = 'M';
+    string[n++] = (char_u)e|0x20;
+    string[n++] = (char_u)(col + ' ' + 1);
+    string[n++] = (char_u)(row + ' ' + 1);
+    add_to_input_buf(string, n);
+}
+
 /* Don't allow mouse events to accumulate. */
-static void drain_mouse_events(void) {
+static void process_mouse_events(void) {
+    static int last_button = 0;
+    Mouse m;
+    Point pt;
+
     while (ecanmouse()) {
-        emouse();
+        m = emouse();
+	pt = subpt(m.xy, screen->r.min);
+	if(!last_button && m.buttons&1) {
+	    send_mouse_event(MOUSE_LEFT, pt.x, pt.y);
+	    last_button = 1;
+	} else if(!last_button && m.buttons&8) {
+	    send_mouse_event(MOUSEWHEEL_LOW, pt.x, pt.y);
+	    last_button = 1;
+	} else if(!last_button && m.buttons&16) {
+	    send_mouse_event(MOUSEWHEEL_LOW|1, pt.x, pt.y);
+	    last_button = 1;
+	} else if(last_button && m.buttons==0) {
+	    send_mouse_event(MOUSE_RELEASE, pt.x, pt.y);
+	    last_button = 0;
+	}
     }
 }
 
@@ -668,8 +702,7 @@ int RealWaitForChar(int, long msec, int*) {
     char utf[UTFmax];
     int len;
 
-    drain_mouse_events();
-    if (msec == 0 && !ecankbd()) {
+    if (msec == 0 && !ecankbd() && !ecanmouse()) {
         return 0;
     }
     if (msec > 0) {
@@ -684,19 +717,24 @@ int RealWaitForChar(int, long msec, int*) {
         interruptable = 1;
         _ALARM((unsigned long)msec);
     }
-    /* TODO garbage collect */
-    rune = ekbd();
-    if (msec > 0) {
-        _ALARM(0);
-        interruptable = 0;
+    if(ecankbd()) {
+	/* TODO garbage collect */
+	rune = ekbd();
+	if (msec > 0) {
+	    _ALARM(0);
+	    interruptable = 0;
+	}
+	if (rune == Ctrl_C && ctrl_c_interrupts) {
+	    got_int = TRUE;
+	    return 0;
+	}
+	len = runetochar(utf, &rune);
+	add_to_input_buf_csi((char_u*)utf, len); /* TODO escape K_SPECIAL? */
+	return len > 0;
+    } else if(ecanmouse()) {
+        process_mouse_events();
     }
-    if (rune == Ctrl_C && ctrl_c_interrupts) {
-	got_int = TRUE;
-	return 0;
-    }
-    len = runetochar(utf, &rune);
-    add_to_input_buf_csi((char_u*)utf, len); /* TODO escape K_SPECIAL? */
-    return len > 0;
+    return 0;
 }
 
 int mch_inchar(char_u *buf, int maxlen, long msec, int) {
@@ -707,7 +745,7 @@ int mch_inchar(char_u *buf, int maxlen, long msec, int) {
 }
 
 int mch_char_avail(void) {
-    return ecankbd();
+    return ecankbd() || ecanmouse();
 }
 
 void mch_delay(long msec, int ignoreinput) {
