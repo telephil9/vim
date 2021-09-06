@@ -679,9 +679,8 @@ static void process_mouse_events(void) {
     Point pt;
     int code;
 
-    code = 0;
     while (ecanmouse()) {
-        m = emouse();
+	m = emouse();
 	pt = subpt(m.xy, screen->r.min);
 	if(last_button) {
 	    if(m.buttons) {
@@ -1156,6 +1155,7 @@ void mch_setmouse(int) {
 #endif
 
 int mch_call_shell(char_u *cmd, int options) {
+    USED(options);
     int p[2];
     int pid;
     int status;
