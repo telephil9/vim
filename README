@@ -3,5 +3,12 @@ vim
 This is a plan9 port of the vim editor.
 The port was initially done by stefanha (see https://vmsplice.net/9vim.html).
 
-Objective here is to add a couple of things (plumbing, mouse support) and fix some issues (shell commands and :make most notably).
+New features/Enhancements:
+- plumber support
+- mouse support
+
+Issues:
+- Commands relying on temporary files (:r, :make, :grep, etc.)
+- Accented characters
+- Backspace key
 
