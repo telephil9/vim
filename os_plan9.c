@@ -37,7 +37,7 @@ enum {
     TMODE_REVERSE = 1,
     TMODE_BOLD    = 2,
 
-    NCOLORS       = 16
+    NCOLORS       = 256
 };
 
 static int scr_inited;
@@ -944,19 +944,50 @@ void eresized(int renew) {
 
 static void init_colors(void) {
     int i;
-    int colors[NCOLORS] = {
-        /* Copied from hardcopy.c and adjusted for libdraw. */
-        0x000000ff, 0x0000c0ff, 0x008000ff, 0x004080ff,
-        0xc00000ff, 0xc000c0ff, 0x808000ff, 0xc0c0c0ff,
-        0x808080ff, 0x6060ffff, 0x00ff00ff, 0x00ffffff,
-        0xff8080ff, 0xff40ffff, 0xffff00ff, 0xffffffff
+    ulong colors[] = {
+	/* gruvbox dark theme */
+	0x282828ff, 0xcc241dff, 0x98971aff, 0xd79921ff,
+	0x458588ff, 0xb16286ff, 0x689d6aff, 0xa89984ff,
+	0x928374ff, 0xfb4934ff, 0xb8bb26ff, 0xfabd2fff,
+	0x83a598ff, 0xd3869bff, 0x8ec07cff,0xebdbb2ff,
     };
-    for (i = 0; i < NCOLORS; i++) {
+    for (i = 0; i < 16; i++) {
         colortab[i] = allocimage(display, Rect(0, 0, 1, 1), screen->chan, 1, colors[i]);
         if (colortab[i] == nil) {
             err9("allocimage failed");
         }
     }
+    colortab[24] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x076678ff);
+    colortab[66] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x427b58ff);
+    colortab[88] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x9d0006ff);
+    colortab[96] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x8f3f71ff);
+    colortab[100] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x79740eff);
+    colortab[108] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x8ec07cff);
+    colortab[109] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x83a598ff);
+    colortab[130] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xaf3a03ff);
+    colortab[136] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xb57614ff);
+    colortab[142] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xb8bb26ff);
+    colortab[167] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xfb4934ff);
+    colortab[175] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xd3869bff);
+    colortab[208] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xfe8019ff);
+    colortab[214] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xfabd2fff);
+    colortab[223] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xebdbb2ff);
+    colortab[228] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xf2e5bcff);
+    colortab[229] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xfbf1c7ff);
+    colortab[230] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xf9f5d7ff);
+    colortab[234] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x1d2021ff);
+    colortab[235] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x282828ff);
+    colortab[236] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x32302fff);
+    colortab[237] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x3c3836ff);
+    colortab[239] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x504945ff);
+    colortab[241] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x665c54ff);
+    colortab[243] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x7c6f64ff);
+    colortab[244] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x928374ff);
+    colortab[245] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0x928374ff);
+    colortab[246] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xa89984ff);
+    colortab[248] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xbdae93ff);
+    colortab[250] = allocimage(display, Rect(0,0,1,1), screen->chan, 1, 0xd5c4a1ff);
+
     mch_set_normal_colors();
 }
 

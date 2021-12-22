@@ -1209,7 +1209,7 @@ static struct builtin_term builtin_termcaps[] =
     {(int)KS_ME,	"\033[0m"},	/* normal */
     {(int)KS_MR,	"\033[1m"},	/* reverse */
     {(int)KS_MD,	"\033[2m"},	/* bold */
-    {(int)KS_CCO,	"16"},		/* allow 16 colors */
+    {(int)KS_CCO,	"256"},		/* allow 16 colors */
     {(int)KS_CAB,	"\033[%db"},	/* set background color */
     {(int)KS_CAF,	"\033[%df"},	/* set foreground color */
     {(int)KS_MS,	"y"},
