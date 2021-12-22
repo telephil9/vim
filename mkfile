@@ -70,6 +70,8 @@ VOFILES=\
 	version.$O\
 	window.$O\
 
+default:V: all
+
 </sys/src/cmd/mkmany
 
 CFLAGS=-c -D_POSIX_SOURCE -DPLAN9 -D_PLAN9_SOURCE -Iproto
