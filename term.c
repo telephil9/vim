@@ -1229,7 +1229,18 @@ static struct builtin_term builtin_termcaps[] =
     {K_PAGEUP,      "\xef\x80\xfeX\x8f"},
     {K_PAGEDOWN,    "\xef\x80\xfeX\x93"},
     {K_INS,         "\xef\x80\xfeX\x94"},
-    /* I couldn't get Plan 9 to report the F1-F12 keys. */
+    {K_F1,          "\xef\x80\xfeX\x81"},
+    {K_F2,          "\xef\x80\xfeX\x82"},
+    {K_F3,          "\xef\x80\xfeX\x83"},
+    {K_F4,          "\xef\x80\xfeX\x84"},
+    {K_F5,          "\xef\x80\xfeX\x85"},
+    {K_F6,          "\xef\x80\xfeX\x86"},
+    {K_F7,          "\xef\x80\xfeX\x87"},
+    {K_F8,          "\xef\x80\xfeX\x88"},
+    {K_F9,          "\xef\x80\xfeX\x89"},
+    {K_F10,         "\xef\x80\xfeX\x8a"},
+    {K_F11,         "\xef\x80\xfeX\x8b"},
+    {K_F12,         "\xef\x80\xfeX\x8c"},
 # endif
 
 # if defined(DEBUG) || defined(ALL_BUILTIN_TCAPS)
