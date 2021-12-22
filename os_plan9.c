@@ -745,7 +745,11 @@ int RealWaitForChar(int, long msec, int*) {
 	    got_int = TRUE;
 	    return 0;
 	}
-	len = runetochar(utf, &rune);
+	if(rune == '\n'){
+	    utf[0] = CAR;
+	    len = 1;
+	}else
+	    len = runetochar(utf, &rune);
 	add_to_input_buf_csi((char_u*)utf, len); /* TODO escape K_SPECIAL? */
 	return len > 0;
     } else if(ecanmouse()) {
