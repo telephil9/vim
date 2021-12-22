@@ -4,7 +4,7 @@ The port was initially done by stefanha (see https://vmsplice.net/9vim.html).
 
 This fork builds on the initial port and brings a couple extra features (plumber, mouse support) but also bug fixes (mainly shell command execution).
 
-!(vim)[vim.png]
+![vim](vim.png)
 
 ## plan9 integration:
 Here are a couple of things I use to help with integration within plan9.  
