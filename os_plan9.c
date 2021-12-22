@@ -596,9 +596,9 @@ static int write_special(char *p, int len) {
 
 /* Draw normal characters. */
 static int write_str(char *p, int len) {
-    int nbytes;
-    int n;
-    int m;
+    int nbytes, n, m, rn, rl;
+    Rune r;
+
     if (len == 0) {
         return 0;
     }
@@ -609,15 +609,18 @@ static int write_str(char *p, int len) {
             len--, nbytes++)
         ;
     n = nbytes;
+    rl = 0;
     while (n > 0) {
-        m = (curcol + n >= scrollregion.max.x) ?
-            scrollregion.max.x - curcol : n;
+	rn = chartorune(&r, p);
+	rl += rn;
+        m = (curcol + 1 >= scrollregion.max.x) ?
+            scrollregion.max.x - curcol : 1;
         if (m == 0) {
             break;
         }
-        stringnbg(screen, Pt(screen->clipr.min.x + curcol * fontsize.x,
+        runestringnbg(screen, Pt(screen->clipr.min.x + curcol * fontsize.x,
                     screen->clipr.min.y + currow * fontsize.y),
-                fgcolor, ZP, curfont, p, m, bgcolor, ZP);
+                fgcolor, ZP, curfont, &r, 1, bgcolor, ZP);
         curcol += m;
         if (curcol == scrollregion.max.x) {
             curcol = scrollregion.min.x;
@@ -627,10 +630,10 @@ static int write_str(char *p, int len) {
                 currow++;
             }
         }
-        p += m;
-        n -= m;
+        p += rn;
+        n -= rn;
     }
-    return nbytes;
+    return rl;
 }
 
 void mch_write(char_u *p, int len) {
@@ -750,7 +753,7 @@ int RealWaitForChar(int, long msec, int*) {
 	    len = 1;
 	}else
 	    len = runetochar(utf, &rune);
-	add_to_input_buf_csi((char_u*)utf, len); /* TODO escape K_SPECIAL? */
+	add_to_input_buf((char_u*)utf, len); /* TODO escape K_SPECIAL? */
 	return len > 0;
     } else if(ecanmouse()) {
         process_mouse_events();
