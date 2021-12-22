@@ -276,11 +276,11 @@ static void scr_stamp_cursor(void) {
         draw(cursorsave, Rect(0, 0, fontsize.x, fontsize.y),
                 screen, nil, Pt(screen->clipr.min.x + curcol * fontsize.x,
                     screen->clipr.min.y + currow * fontsize.y));
-        border(screen, Rect(screen->clipr.min.x + curcol * fontsize.x,
+        drawop(screen, Rect(screen->clipr.min.x + curcol * fontsize.x,
                     screen->clipr.min.y + currow * fontsize.y,
                     screen->clipr.min.x + (curcol + 1) * fontsize.x,
                     screen->clipr.min.y + (currow + 1) * fontsize.y),
-                2, colortab[cterm_normal_fg_color - 1], ZP);
+                colortab[cterm_normal_fg_color - 1], cursorsave, ZP, SoverD);
     }
 }
 
