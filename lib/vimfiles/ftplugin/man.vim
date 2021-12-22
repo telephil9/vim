@@ -41,13 +41,8 @@ if !exists("s:man_tag_depth")
 
 let s:man_tag_depth = 0
 
-if !has("win32") && $OSTYPE !~ 'cygwin\|linux' && system('uname -s') =~ "SunOS" && system('uname -r') =~ "^5"
-  let s:man_sect_arg = "-s"
-  let s:man_find_arg = "-l"
-else
-  let s:man_sect_arg = ""
-  let s:man_find_arg = "-w"
-endif
+let s:man_sect_arg = ""
+let s:man_find_arg = "-w"
 
 func <SID>PreGetPage(cnt)
   if a:cnt == 0
@@ -78,12 +73,12 @@ func <SID>GetCmdArg(sect, page)
 endfunc
 
 func <SID>FindPage(sect, page)
-  let where = system("/usr/bin/man ".s:man_find_arg.' '.s:GetCmdArg(a:sect, a:page))
-  if where !~ "^/"
-    if matchstr(where, " [^ ]*$") !~ "^ /"
-      return 0
-    endif
-  endif
+"  let where = system("/bin/man ".s:man_find_arg.' '.s:GetCmdArg(a:sect, a:page))
+"  if where !~ "^/"
+"    if matchstr(where, " [^ ]*$") !~ "^ /"
+"      return 0
+"    endif
+"  endif
   return 1
 endfunc
 
@@ -106,10 +101,10 @@ func <SID>GetPage(...)
   if sect != "" && s:FindPage(sect, page) == 0
     let sect = ""
   endif
-  if s:FindPage(sect, page) == 0
-    echo "\nCannot find a '".page."'."
-    return
-  endif
+"  if s:FindPage(sect, page) == 0
+"    echo "\nCannot find a '".page."'."
+"    return
+"  endif
   exec "let s:man_tag_buf_".s:man_tag_depth." = ".bufnr("%")
   exec "let s:man_tag_lin_".s:man_tag_depth." = ".line(".")
   exec "let s:man_tag_col_".s:man_tag_depth." = ".col(".")
@@ -143,7 +138,7 @@ func <SID>GetPage(...)
   setl ma
   silent exec "norm 1GdG"
   let $MANWIDTH = winwidth(0)
-  silent exec "r!/usr/bin/man ".s:GetCmdArg(sect, page)." | col -b"
+  silent exec "r!/bin/man ".s:GetCmdArg(sect, page)." | sed 's/^     //' | col -b"
   " Remove blank lines from top and bottom.
   while getline(1) =~ '^\s*$'
     silent norm ggdd
