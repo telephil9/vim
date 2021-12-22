@@ -1154,38 +1154,27 @@ void mch_setmouse(int) {
 }
 #endif
 
-int mch_call_shell(char_u *cmd, int options) {
-    USED(options);
-    int p[2];
-    int pid;
+int
+mch_call_shell(char_u *cmd, int options)
+{
+    pid_t pid;
     int status;
 
-    status = FAIL;
-    if(pipe(p) < 0) {
-	return FAIL;
-    }
-    pid = rfork(RFPROC|RFFDG|RFENVG);
-    switch(pid) {
-    case -1:
-	close(p[0]);
-	close(p[1]);
-	return FAIL;
-    case 0:
-	close(p[0]);
-	dup2(p[1], 1);
-	dup2(2, 1);
-	if (cmd) {
-	    execl("/bin/rc", "rc", "-c", (char*)cmd, NULL);
-	} else {
+    if(options & SHELL_COOKED)
+	settmode(TMODE_COOK);
+
+    pid = rfork(RFPROC|RFFDG|RFENVG|RFNOTEG);
+    if(pid < 0)
+	return -1;
+    if(pid == 0){
+	if (cmd) 
+	    execl("/bin/rc", "rc", "-c", cmd, NULL);
+	 else 
 	    execl("/bin/rc", "rc", NULL);
-	}
-	exit(122);
-	break;
-    case 1:
-	waitpid(pid, &status, 0);
-	close(p[0]);
-	close(p[1]);
-	break;
+	
+	_exit(122);
     }
+    waitpid(pid, &status, 0);
     return status;
 }
+
