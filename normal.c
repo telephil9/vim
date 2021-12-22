@@ -5424,7 +5424,8 @@ nv_ident(cap)
 		if (cap->count0 != 0 && !(isman || isman_s))
 		    sprintf((char *)buf, ".,.+%ld", cap->count0 - 1);
 
-		STRCAT(buf, "! ");
+		if(kp[0] != ':')
+		    STRCAT(buf, "! ");
 		if (cap->count0 == 0 && isman_s)
 		    STRCAT(buf, "man");
 		else
