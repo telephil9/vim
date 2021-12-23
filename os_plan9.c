@@ -466,7 +466,8 @@ static int scr_escape_sequence(char *p, int len) {
             if (len == 0) {
                 /* TODO */
                 fprintf(stderr, "scr_escape_sequence: early end of escape sequence\n");
-                exit(1);
+		trash_input_buf();
+		return 0;
             }
 
             switch (*p) {
