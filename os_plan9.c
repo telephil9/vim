@@ -89,6 +89,8 @@ static void drain_plumb_events(void) {
     while(ecanread(plumbkey)){
 	eread(plumbkey, &e);
 	m = e.v;
+	if(m == nil)
+		return;
 	addr = plumblookup(m->attr, "addr");
 	if(addr)
 		l = atoi(addr);
@@ -1058,7 +1060,8 @@ static void scr_init(void) {
     /* Mouse events must be enabled to receive window resizes. */
     einit(Emouse | Ekeyboard);
     plumbkey = eplumb(512, "edit");
-    start_plumber_thread();
+    if(plumbkey >= 0)
+	    start_plumber_thread();
     scr_inited = TRUE;
 }
 
