@@ -678,52 +678,13 @@ static void send_mouse_event(int e, int x, int y) {
     add_to_input_buf(string, n);
 }
 
-/* Don't allow mouse events to accumulate. */
-static void process_mouse_events(void) {
-    static int last_button = 0;
-    Mouse m;
-    Point pt;
-    int code;
-
-    while (ecanmouse()) {
-	m = emouse();
-	pt = subpt(m.xy, screen->r.min);
-	if(last_button) {
-	    if(m.buttons) {
-		code = MOUSE_DRAG;
-	    } else {
-		code = MOUSE_RELEASE;
-		last_button = 0;
-	    }
-	} else {
-	    if(m.buttons&1) {
-		code = MOUSE_LEFT;
-		last_button = 1;
-	    } else if(m.buttons&2) {
-		code = MOUSE_MIDDLE;
-		last_button = 2;
-	    } else if(m.buttons&4) {
-		code = MOUSE_RIGHT;
-		last_button = 4;
-	    } else if(m.buttons&8) {
-		code = MOUSEWHEEL_LOW;
-		last_button = 8;
-	    } else if(m.buttons&16) {
-		code = MOUSEWHEEL_LOW|1;
-		last_button = 16;
-	    } else {
-		continue;
-	    }
-	    code |= 0x20;
-	}
-	send_mouse_event(code, pt.x, pt.y);
-    }
-}
-
 int RealWaitForChar(int, long msec, int*) {
+    static int last_button = 0;
     Rune rune;
     char utf[UTFmax];
     int len;
+    Point pt;
+    int code;
 
     if (msec == 0 && !ecankbd() && !ecanmouse()) {
         return 0;
@@ -740,28 +701,63 @@ int RealWaitForChar(int, long msec, int*) {
         interruptable = 1;
         _ALARM((unsigned long)msec);
     }
-    if(ecankbd()) {
-	/* TODO garbage collect */
-	rune = ekbd();
-	if (msec > 0) {
-	    _ALARM(0);
-	    interruptable = 0;
-	}
-	if (rune == Ctrl_C && ctrl_c_interrupts) {
-	    got_int = TRUE;
-	    return 0;
-	}
-	if(rune == '\n'){
-	    utf[0] = CAR;
-	    len = 1;
-	}else
-	    len = runetochar(utf, &rune);
-	add_to_input_buf((char_u*)utf, len); /* TODO escape K_SPECIAL? */
-	return len > 0;
-    } else if(ecanmouse()) {
-        process_mouse_events();
+
+    Event ev;
+    ulong evtype = eread(Emouse | Ekeyboard, &ev);
+    if (msec > 0) {
+        _ALARM(0);
+        interruptable = 0;
     }
-    return 0;
+
+    switch (evtype) {
+    case Emouse: 
+        pt = subpt(ev.mouse.xy, screen->r.min);
+        if (last_button) {
+            if (ev.mouse.buttons) {
+                code = MOUSE_DRAG;
+            } else {
+                code = MOUSE_RELEASE;
+                last_button = 0;
+            }
+        } else {
+            if (ev.mouse.buttons & 1) {
+                code = MOUSE_LEFT;
+                last_button = 1;
+            } else if (ev.mouse.buttons & 2) {
+                code = MOUSE_MIDDLE;
+                last_button = 2;
+            } else if (ev.mouse.buttons & 4) {
+                code = MOUSE_RIGHT;
+                last_button = 4;
+            } else if (ev.mouse.buttons & 8) {
+                code = MOUSEWHEEL_LOW;
+                last_button = 8;
+            } else if (ev.mouse.buttons & 16) {
+                code = MOUSEWHEEL_LOW | 1;
+                last_button = 16;
+            } else {
+                return 0;
+            }
+            code |= 0x20;
+        }
+        send_mouse_event(code, pt.x, pt.y);
+        return 1;
+    case Ekeyboard:
+        rune = ev.kbdc;
+        if (rune == Ctrl_C && ctrl_c_interrupts) {
+            got_int = TRUE;
+            return 0;
+        }
+        if(rune == '\n'){
+            utf[0] = CAR;
+            len = 1;
+        } else
+            len = runetochar(utf, &rune);
+        add_to_input_buf((char_u*)utf, len); /* TODO escape K_SPECIAL? */
+        return len > 0;
+    default:
+        return 0;
+    }
 }
 
 int mch_inchar(char_u *buf, int maxlen, long msec, int) {
