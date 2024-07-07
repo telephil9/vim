@@ -10666,6 +10666,9 @@ f_has(argvars, rettv)
 #ifdef EBCDIC
 	"ebcdic",
 #endif
+#ifdef PLAN9
+	"plan9",
+#endif
 #ifndef CASE_INSENSITIVE_FILENAME
 	"fname_case",
 #endif
