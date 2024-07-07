@@ -1265,7 +1265,11 @@ vim_strsave_shellescape(string)
 	else
 # endif
 	if (*p == '\'')
+# ifdef PLAN9
+	    length += 1;		/* ' => '' */
+# else
 	    length += 3;		/* ' => '\'' */
+# endif
     }
 
     /* Allocate memory for the result and fill it. */
@@ -1300,8 +1304,10 @@ vim_strsave_shellescape(string)
 	    if (*p == '\'')
 	    {
 		*d++='\'';
+# ifndef PLAN9
 		*d++='\\';
 		*d++='\'';
+# endif
 		*d++='\'';
 		++p;
 		continue;
