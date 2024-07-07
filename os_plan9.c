@@ -1165,9 +1165,6 @@ void clip_mch_set_selection(VimClipboard *cbd) {
     int type;
     int fd;
 
-    fd = open("/dev/snarf", O_RDONLY);
-    if (fd < 0)
-	return;
     /* If the '*' register isn't already filled in, fill it in now. */
     cbd->owned = TRUE;
     clip_get_selection(cbd);
