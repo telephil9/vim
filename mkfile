@@ -70,6 +70,9 @@ VOFILES=\
 	version.$O\
 	window.$O\
 
+CLEANFILES=\
+	pathdef.c\
+
 default:V: all
 
 </sys/src/cmd/mkmany
@@ -103,3 +106,10 @@ $O.vim:V:	$VOFILES
 
 $O.xxd:	xxd/xxd.c
 	$CC -D_POSIX_SOURCE -o $target $prereq
+
+install:V: installruntime
+
+installruntime:V:
+	rm -rf /sys/lib/vim/vimfiles
+	mkdir -p /sys/lib/vim/vimfiles
+	dircp lib/vimfiles /sys/lib/vim/vimfiles
