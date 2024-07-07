@@ -4,6 +4,8 @@ The port was initially done by stefanha (see https://vmsplice.net/9vim.html).
 
 This fork builds on the initial port and brings a couple extra features (plumber, mouse support) but also bug fixes (mainly shell command execution).
 
+*NOTE:* An updated version is available here: https://git.sr.ht/~shurizzle/9vim/
+
 ![vim](vim.png)
 
 ## plan9 integration:
